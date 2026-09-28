@@ -25,7 +25,6 @@ public class ProductManager implements Searchable<Product> {
                         "Mã sản phẩm đã tồn tại: " + product.getId());
             }
         }
-
         products.add(product);
     }
 
@@ -40,18 +39,49 @@ public class ProductManager implements Searchable<Product> {
 
     @Override
     public List<Product> search(String keyword) {
-        if (keyword == null) {
-            throw new IllegalArgumentException("Từ khóa không được rỗng");
+        return search(keyword, "");
+    }
+
+    public List<Product> search(String keyword, String category) {
+        if (keyword == null || category == null) {
+            throw new IllegalArgumentException(
+                    "Điều kiện tìm kiếm không được null");
         }
 
         List<Product> results = new ArrayList<>();
         String text = keyword.trim().toLowerCase();
+        String type = category.trim();
 
         for (Product product : products) {
-            if (product.getName().toLowerCase().contains(text)) {
+            boolean matchesName =
+                    product.getName().toLowerCase().contains(text);
+            boolean matchesCategory =
+                    type.isEmpty()
+                    || product.category().equalsIgnoreCase(type);
+
+            if (matchesName && matchesCategory) {
                 results.add(product);
             }
         }
         return results;
+    }
+
+    public void deactivate(String id) {
+        Product product = findById(id);
+        product.setActive(false);
+    }
+
+    public List<Product> listAll() {
+        return new ArrayList<>(products);
+    }
+
+    public long countActive() {
+        long count = 0;
+        for (Product product : products) {
+            if (product.isActive()) {
+                count++;
+            }
+        }
+        return count;
     }
 }
