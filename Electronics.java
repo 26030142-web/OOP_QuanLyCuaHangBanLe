@@ -1,32 +1,34 @@
+// Lop dien tu ke thua thong tin chung tu san pham.
 public class Electronics extends Product {
-    private int warrantyMonths;
+    private int thangBaoHanh;
 
-    public Electronics(String id, String name, double price, int warrantyMonths) {
-        this(id, name, price, TON_KHO_MAC_DINH, warrantyMonths);
+    // Ham tao ngan noi voi ham tao co ton kho.
+    public Electronics(String ma, String ten, double gia, int thangBaoHanh) {
+        this(ma, ten, gia, TON_KHO_MAC_DINH, thangBaoHanh);
     }
 
-    public Electronics(String id, String name, double price, int stock, int warrantyMonths) {
-        super(id, name, price, stock);
-        setWarrantyMonths(warrantyMonths);
+    // Ham tao day du tao san pham dien tu.
+    public Electronics(String ma, String ten, double gia, int tonKho, int thangBaoHanh) {
+        super(ma, ten, gia, tonKho);
+        ganThangBaoHanh(thangBaoHanh);
     }
 
-    public int getWarrantyMonths() {
-        return warrantyMonths;
+    // Tra ve so thang bao hanh.
+    public int layThangBaoHanh() { return thangBaoHanh; }
+
+    // Thang bao hanh khong duoc am.
+    public void ganThangBaoHanh(int thangBaoHanh) {
+        if (thangBaoHanh < 0) {
+            throw new IllegalArgumentException("So thang bao hanh khong duoc am.");
+        }
+        this.thangBaoHanh = thangBaoHanh;
     }
 
-    public void setWarrantyMonths(int warrantyMonths) {
-        if (warrantyMonths < 0)
-            throw new IllegalArgumentException("Tháng bảo hành không được âm");
-        this.warrantyMonths = warrantyMonths;
-    }
-
+    // Ghi de nghiep vu lay loai san pham.
     @Override
-    public String getCategory() {
-        return "Electronics";
-    }
+    public String layLoai() { return "Dien tu"; }
 
+    // Ghi de nghiep vu lay thong tin rieng cua do dien tu.
     @Override
-    public String getExtraInfo() {
-        return "Bảo hành: " + warrantyMonths + " tháng";
-    }
+    public String layThongTinRieng() { return "Bao hanh: " + thangBaoHanh + " thang"; }
 }
