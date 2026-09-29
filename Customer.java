@@ -1,66 +1,69 @@
 import java.util.Objects;
 
+// Lop luu thong tin mot khach hang.
 public class Customer {
-    private String id;
-    private String name;
-    private String phone;
+    private String ma;
+    private String ten;
+    private String soDienThoai;
 
-    public Customer(String id, String name) {
-        this(id, name, "Chưa có");
+    // Ham tao ngan dung gia tri mac dinh cho so dien thoai.
+    public Customer(String ma, String ten) {
+        this(ma, ten, "Khong co");
     }
 
-    public Customer(String id, String name, String phone) {
-        setId(id);
-        setName(name);
-        setPhone(phone);
+    // Ham tao day du gan thong tin qua cac ham gan.
+    public Customer(String ma, String ten, String soDienThoai) {
+        ganMa(ma);
+        ganTen(ten);
+        ganSoDienThoai(soDienThoai);
     }
 
-    public String getId() {
-        return id;
+    // Tra ve ma khach hang.
+    public String layMa() { return ma; }
+
+    // Tra ve ten khach hang.
+    public String layTen() { return ten; }
+
+    // Tra ve so dien thoai.
+    public String laySoDienThoai() { return soDienThoai; }
+
+    // Kiem tra ma khach hang truoc khi gan.
+    public void ganMa(String ma) {
+        if (ma == null || ma.trim().isEmpty() || ma.contains(";")) {
+            throw new IllegalArgumentException("Ma khach hang khong duoc de trong hoac chua dau cham phay.");
+        }
+        this.ma = ma.trim();
     }
 
-    public String getName() {
-        return name;
+    // Kiem tra ten khach hang truoc khi gan.
+    public void ganTen(String ten) {
+        if (ten == null || ten.trim().isEmpty() || ten.contains(";")) {
+            throw new IllegalArgumentException("Ten khach hang khong duoc de trong hoac chua dau cham phay.");
+        }
+        this.ten = ten.trim();
     }
 
-    public String getPhone() {
-        return phone;
+    // Kiem tra so dien thoai truoc khi gan.
+    public void ganSoDienThoai(String soDienThoai) {
+        if (soDienThoai == null || soDienThoai.trim().isEmpty() || soDienThoai.contains(";")) {
+            throw new IllegalArgumentException("So dien thoai khong duoc de trong hoac chua dau cham phay.");
+        }
+        this.soDienThoai = soDienThoai.trim();
     }
 
-    public void setId(String id) {
-        if (id == null || id.trim().isEmpty() || id.contains(";"))
-            throw new IllegalArgumentException("Mã khách hàng không hợp lệ");
-        this.id = id.trim();
-    }
-
-    public void setName(String name) {
-        if (name == null || name.trim().isEmpty() || name.contains(";"))
-            throw new IllegalArgumentException("Tên khách hàng không hợp lệ");
-        this.name = name.trim();
-    }
-
-    public void setPhone(String phone) {
-        if (phone == null || phone.trim().isEmpty() || phone.contains(";"))
-            throw new IllegalArgumentException("Số điện thoại không hợp lệ");
-        this.phone = phone.trim();
-    }
-
+    // Ghi de de hien thi khach hang.
     @Override
-    public String toString() {
-        return id + " | " + name + " | " + phone;
+    public String toString() { return ma + " | " + ten + " | " + soDienThoai; }
+
+    // Ghi de so sanh khach hang theo ma.
+    @Override
+    public boolean equals(Object doiTuong) {
+        if (this == doiTuong) return true;
+        if (!(doiTuong instanceof Customer)) return false;
+        return ma.equalsIgnoreCase(((Customer) doiTuong).ma);
     }
 
+    // Tao ma bam phu hop voi cach so sanh equals().
     @Override
-    public boolean equals(Object object) {
-        if (this == object)
-            return true;
-        if (!(object instanceof Customer))
-            return false;
-        return id.equalsIgnoreCase(((Customer) object).id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id.toLowerCase());
-    }
+    public int hashCode() { return Objects.hash(ma.toLowerCase()); }
 }
