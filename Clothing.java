@@ -1,32 +1,34 @@
+// Lop quan ao ke thua thong tin chung tu san pham.
 public class Clothing extends Product {
-    private String size;
+    private String kichCo;
 
-    public Clothing(String id, String name, double price, String size) {
-        this(id, name, price, TON_KHO_MAC_DINH, size);
+    // Ham tao ngan noi voi ham tao co ton kho.
+    public Clothing(String ma, String ten, double gia, String kichCo) {
+        this(ma, ten, gia, TON_KHO_MAC_DINH, kichCo);
     }
 
-    public Clothing(String id, String name, double price, int stock, String size) {
-        super(id, name, price, stock);
-        setSize(size);
+    // Ham tao day du tao san pham quan ao.
+    public Clothing(String ma, String ten, double gia, int tonKho, String kichCo) {
+        super(ma, ten, gia, tonKho);
+        ganKichCo(kichCo);
     }
 
-    public String getSize() {
-        return size;
+    // Tra ve kich co quan ao.
+    public String layKichCo() { return kichCo; }
+
+    // Kich co khong duoc de trong hoac chua dau phan cach tep phan cach.
+    public void ganKichCo(String kichCo) {
+        if (kichCo == null || kichCo.trim().isEmpty() || kichCo.contains(";")) {
+            throw new IllegalArgumentException("Kich co khong duoc de trong hoac chua dau cham phay.");
+        }
+        this.kichCo = kichCo.trim();
     }
 
-    public void setSize(String size) {
-        if (size == null || size.trim().isEmpty() || size.contains(";"))
-            throw new IllegalArgumentException("Kích cỡ không hợp lệ");
-        this.size = size.trim();
-    }
-
+    // Ghi de nghiep vu lay loai san pham.
     @Override
-    public String getCategory() {
-        return "Clothing";
-    }
+    public String layLoai() { return "Quan ao"; }
 
+    // Ghi de nghiep vu lay thong tin rieng cua quan ao.
     @Override
-    public String getExtraInfo() {
-        return "Cỡ: " + size;
-    }
+    public String layThongTinRieng() { return "Kich co: " + kichCo; }
 }
