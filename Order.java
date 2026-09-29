@@ -1,70 +1,68 @@
 import java.util.ArrayList;
 import java.util.Objects;
 
+// Lop don hang chua mot khach hang va cac dong san pham.
 public class Order {
-    private String id;
-    private Customer customer;
-    private ArrayList<OrderItem> items;
+    private String ma;
+    private Customer khachHang;
+    private ArrayList<OrderItem> danhSachMatHang;
 
-    public Order(String id, Customer customer) {
-        this(id, customer, new ArrayList<OrderItem>());
+    // Ham tao ngan tao danh sach dong hang rong.
+    public Order(String ma, Customer khachHang) {
+        this(ma, khachHang, new ArrayList<OrderItem>());
     }
 
-    public Order(String id, Customer customer, ArrayList<OrderItem> items) {
-        if (id == null || id.trim().isEmpty())
-            throw new IllegalArgumentException("Mã đơn không hợp lệ");
-        if (customer == null || items == null)
-            throw new IllegalArgumentException("Đơn hàng thiếu dữ liệu");
-        this.id = id.trim();
-        this.customer = customer;
-        this.items = items;
+    // Ham tao day du dung khi tao hoac khoi phuc don.
+    public Order(String ma, Customer khachHang, ArrayList<OrderItem> danhSachMatHang) {
+        if (ma == null || ma.trim().isEmpty()) throw new IllegalArgumentException("Ma don hang khong duoc de trong.");
+        if (khachHang == null || danhSachMatHang == null) throw new IllegalArgumentException("Thong tin don hang chua day du.");
+        this.ma = ma.trim();
+        this.khachHang = khachHang;
+        this.danhSachMatHang = danhSachMatHang;
     }
 
-    public String getId() {
-        return id;
+    // Tra ve ma don hang.
+    public String layMa() { return ma; }
+
+    // Tra ve khach hang dat don.
+    public Customer layKhachHang() { return khachHang; }
+
+    // Tra ve danh sach dong hang trong don.
+    public ArrayList<OrderItem> layDanhSachMatHang() { return danhSachMatHang; }
+
+    // Nap chong: tao dong hang tu san pham va so luong.
+    public void themMatHang(Product sanPham, int soLuong) {
+        danhSachMatHang.add(new OrderItem(sanPham, soLuong));
     }
 
-    public Customer getCustomer() {
-        return customer;
+    // Nap chong: them mot dong hang da co san vao don.
+    public void themMatHang(OrderItem item) {
+        if (item == null) throw new IllegalArgumentException("Mat hang trong don khong duoc rong.");
+        danhSachMatHang.add(item);
     }
 
-    public ArrayList<OrderItem> getItems() {
-        return items;
+    // Cong tien cua tat ca dong hang trong don.
+    public double tinhTongTien() {
+        double tong = 0;
+        for (OrderItem item : danhSachMatHang) tong += item.tinhThanhTien();
+        return tong;
     }
 
-    public void addItem(Product product, int quantity) {
-        items.add(new OrderItem(product, quantity));
-    }
-
-    public void addItem(OrderItem item) {
-        if (item == null)
-            throw new IllegalArgumentException("Dòng hàng không được rỗng");
-        items.add(item);
-    }
-
-    public double getTotal() {
-        double total = 0;
-        for (OrderItem item : items)
-            total += item.getAmount();
-        return total;
-    }
-
+    // Ghi de de hien thi tom tat don hang.
     @Override
     public String toString() {
-        return id + " | Khách: " + customer.getName() + " | Tổng tiền: " + getTotal();
+        return ma + " | Khach hang: " + khachHang.layTen() + " | Tong tien: " + tinhTongTien();
     }
 
+    // Ghi de so sanh hai don hang theo ma.
     @Override
-    public boolean equals(Object object) {
-        if (this == object)
-            return true;
-        if (!(object instanceof Order))
-            return false;
-        return id.equalsIgnoreCase(((Order) object).id);
+    public boolean equals(Object doiTuong) {
+        if (this == doiTuong) return true;
+        if (!(doiTuong instanceof Order)) return false;
+        return ma.equalsIgnoreCase(((Order) doiTuong).ma);
     }
 
+    // Tao ma bam phu hop voi equals().
     @Override
-    public int hashCode() {
-        return Objects.hash(id.toLowerCase());
-    }
+    public int hashCode() { return Objects.hash(ma.toLowerCase()); }
 }
