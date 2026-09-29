@@ -1,0 +1,63 @@
+import java.util.ArrayList;
+import java.util.List;
+
+public class CustomerManager implements Searchable<Customer> {
+    private final List<Customer> customers = new ArrayList<>();
+
+    public void add(Customer customer) {
+        if (customer == null) {
+            throw new IllegalArgumentException("Khách hàng không được rỗng");
+        }
+
+        for (Customer current : customers) {
+            if (current.getId().equals(customer.getId())) {
+                throw new IllegalArgumentException(
+                        "Mã khách hàng đã tồn tại: " + customer.getId());
+            }
+        }
+        customers.add(customer);
+    }
+
+    public Customer findById(String id) {
+        for (Customer customer : customers) {
+            if (customer.getId().equals(id)) {
+                return customer;
+            }
+        }
+        throw new IllegalArgumentException(
+                "Không tìm thấy khách hàng có mã: " + id);
+    }
+
+    @Override
+    public List<Customer> search(String keyword) {
+        return search(keyword, false);
+    }
+
+    public List<Customer> search(String keyword, boolean includeInactive) {
+        if (keyword == null) {
+            throw new IllegalArgumentException(
+                    "Từ khóa tìm kiếm không được null");
+        }
+
+        List<Customer> results = new ArrayList<>();
+        String text = keyword.trim().toLowerCase();
+
+        for (Customer customer : customers) {
+            boolean matchesName =
+                    customer.getName().toLowerCase().contains(text);
+
+            if (matchesName && (includeInactive || customer.isActive())) {
+                results.add(customer);
+            }
+        }
+        return results;
+    }
+
+    public void deactivate(String id) {
+        findById(id).setActive(false);
+    }
+
+    public List<Customer> listAll() {
+        return new ArrayList<>(customers);
+    }
+}
