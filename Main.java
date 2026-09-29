@@ -1,295 +1,471 @@
-import java.util.ArrayList;
 import java.util.Scanner;
-import java.io.PrintStream;
 
+// Lop chay chuong trinh, hien thi menu va nhan du lieu tu ban phim.
 public class Main {
+    // Doi tuong dung chung de doc du lieu tu ban phim.
     private static final Scanner input = new Scanner(System.in);
-    private static final QuanLyCuaHang shop = QuanLyCuaHang.getInstance();
+    // Lay doi tuong cua hang duy nhat.
+    private static final RetailStore store = RetailStore.layInstance();
 
+    // Nap tep phan cach truoc khi mo menu; luu lai du lieu khi nguoi dung thoat.
     public static void main(String[] args) {
         try {
-            shop.docFile();
-        } catch (QuanLyCuaHang.DataException e) {
+            store.docDuLieu();
+        } catch (RetailStore.DataStorageException e) {
             System.out.println(e.getMessage());
         }
-        int choice;
+        int luaChon;
         do {
-            System.out.println("\n===== QUAN LY CUA HANG BAN  =====");
-            System.out
-                    .println("1. Quan ly san pham\n2. Quan ly khach hang\n3. Quan Ly Don hang \n4. Thu chi\n0. Thoat");
-            choice = readInt("Chon: ", 0, 4);
+            hienThiMenuChinh();
+            luaChon = nhapSoNguyen("Chon chuc nang: ", 0, 4);
             try {
-                switch (choice) {
-                    case 1:
-                        productMenu();
-                        break;
-                    case 2:
-                        customerMenu();
-                        break;
-                    case 3:
-                        orderMenu();
-                        break;
-                    case 4:
-                        thuChiMenu();
-                        break;
-                    case 0:
-                        shop.ghiFile();
-                        System.out.println("Da luu du lieu va thoat.");
-                        break;
-                    default:
-                        break;
+                if (luaChon == 1)
+                    menuSanPham();
+                else if (luaChon == 2)
+                    menuKhachHang();
+                else if (luaChon == 3)
+                    menuDonHang();
+                else if (luaChon == 4)
+                    menuThuChi();
+                else if (luaChon == 0) {
+                    store.luuDuLieu();
+                    System.out.println("Da luu du lieu. Tam biet!");
                 }
             } catch (RuntimeException e) {
-                System.out.println("Khong the thuc hien: " + e.getMessage());
+                System.out.println("Thao tac that bai: " + e.getMessage());
             }
-        } while (choice != 0);
+        } while (luaChon != 0);
         input.close();
     }
 
-    private static String readText(String label) {
+    // In menu chinh voi khung ky tu de hien thi on dinh trong cua so dong lenh.
+    private static void hienThiMenuChinh() {
+        System.out.println();
+        System.out.println("+------------------------------------------------+");
+        System.out.println("|          QUAN LY CUA HANG BAN LE               |");
+        System.out.println("+------------------------------------------------+");
+        System.out.println("|  1. Quan ly san pham                           |");
+        System.out.println("|  2. Quan ly khach hang                         |");
+        System.out.println("|  3. Quan ly don hang                           |");
+        System.out.println("|  4. Quan ly thu chi                            |");
+        System.out.println("|  0. Luu va thoat                               |");
+        System.out.println("+------------------------------------------------+");
+    }
+
+    // Nhan chuoi khong rong, dong thoi chan dau cham phay cua file tep phan cach.
+    private static String nhapChuoi(String nhan) {
         while (true) {
-            System.out.print(label);
-            String value = input.nextLine().trim();
-            if (!value.isEmpty())
-                return value;
-            System.out.println("Khong duoc de trong.");
+            System.out.print(nhan);
+            String giaTri = input.nextLine().trim();
+            if (!giaTri.isEmpty() && !giaTri.contains(";"))
+                return giaTri;
+            System.out.println("Khong duoc de trong hoac chua dau ';'. Hay nhap lai.");
         }
     }
 
-    private static int readInt(String label, int min, int max) {
+    // Nhan so nguyen trong khoang cho phep va hoi lai dung truong neu sai.
+    private static int nhapSoNguyen(String nhan, int min, int max) {
         while (true) {
-            System.out.print(label);
+            System.out.print(nhan);
             try {
-                int value = Integer.parseInt(input.nextLine().trim());
-                if (value >= min && value <= max)
-                    return value;
+                int giaTri = Integer.parseInt(input.nextLine().trim());
+                if (giaTri >= min && giaTri <= max)
+                    return giaTri;
             } catch (NumberFormatException e) {
-                System.out.println("Hay nhap so hop le.");
+                System.out.println("Hay nhap so nguyen.");
             }
-            System.out.println("Nhap so tu " + min + " den " + max + ".");
+            System.out.println("Hay nhap so trong khoang " + min + " den " + max + ".");
         }
     }
 
-    private static int readPositiveInt(String label) {
-        return readInt(label, 1, Integer.MAX_VALUE);
+    // Nhan so luong lon hon 0.
+    private static int nhapSoDuong(String nhan) {
+        return nhapSoNguyen(nhan, 1, Integer.MAX_VALUE);
     }
 
-    private static double readPositiveDouble(String label) {
+    // Nhan so tien hop le va lon hon 0.
+    private static double nhapSoTien(String nhan) {
         while (true) {
-            System.out.print(label);
+            System.out.print(nhan);
             try {
-                double value = Double.parseDouble(input.nextLine().trim());
-                if (value > 0)
-                    return value;
+                double giaTri = Double.parseDouble(input.nextLine().trim());
+                if (giaTri > 0 && !Double.isInfinite(giaTri) && !Double.isNaN(giaTri))
+                    return giaTri;
             } catch (NumberFormatException e) {
-                System.out.println("Hay nhap so hop le.");
+                System.out.println("Hay nhap mot so hop le.");
             }
-            System.out.println("Gia tri phai lon hon 0.");
+            System.out.println("Gia tri phai lon hon 0. Hay nhap lai.");
         }
     }
 
-    private static void showList(Iterable<?> list) {
+    // Nhan ngay co that theo dang ngay/thang/nam.
+    private static String nhapNgay(String nhan) {
+        while (true) {
+            String ngay = nhapChuoi(nhan);
+            try {
+                java.time.LocalDate.parse(ngay,
+                        java.time.format.DateTimeFormatter.ofPattern("dd/MM/uuuu")
+                                .withResolverStyle(java.time.format.ResolverStyle.STRICT));
+                return ngay;
+            } catch (java.time.format.DateTimeParseException e) {
+                System.out.println("Ngay khong hop le. Dung dd/MM/yyyy, vi du 10/12/2026. Hay nhap lai.");
+            }
+        }
+    }
+
+    // In tung phan tu cua danh sach; bao ro khi danh sach chua co du lieu.
+    private static void hienThiDanhSach(Iterable<?> danhSachMatHang) {
         boolean empty = true;
-        for (Object item : list) {
-            System.out.println(item);
+        for (Object item : danhSachMatHang) {
+            System.out.println("  " + item);
             empty = false;
         }
         if (empty)
-            System.out.println("Danh sach dang trong!!.");
+            System.out.println("Khong co du lieu.");
     }
 
-    private static void saved() {
-        shop.ghiFile();
+    // Luu thay doi ngay sau thao tac them, sua hoac xoa.
+    private static void luuSauKhiThayDoi() {
+        store.luuDuLieu();
     }
 
-    private static Product readProduct(String id, int stock) {
-        return readProduct(id, stock, null);
-    }
-
-    private static Product readProduct(String id, int stock, String currentCategory) {
-        String name = readText("Ten San Pham: ");
-        double price = readPositiveDouble("Giá bán: ");
-        if (currentCategory == null)
-            System.out.println("1. Food\n2. Electronics\n3. Clothing");
-        else
-            stock = readInt("Ton Kho Moi: ", 0, Integer.MAX_VALUE);
-        String typeName;
-        String info;
-        int type = currentCategory == null ? readInt("Loai: ", 1, 3)
-                : currentCategory.equals("Food") ? 1
-                        : currentCategory.equals("Electronics") ? 2 : 3;
-        if (type == 1) {
-            typeName = "food";
-            info = readText("HSD (yyyy-MM-dd): ");
-        } else if (type == 2) {
-            typeName = "electronics";
-            info = String.valueOf(readInt("Bao Hanh (Thang): ", 0, 100));
-        } else {
-            typeName = "clothing";
-            info = readText("Kich co: ");
+    // Doc ma moi chua duoc dung cho san pham.
+    private static String nhapMaSanPhamMoi() {
+        while (true) {
+            String ma = nhapChuoi("Ma san pham: ");
+            boolean tonTai = false;
+            for (Product sanPham : store.layDanhSachSanPham()) {
+                if (sanPham.layMa().equalsIgnoreCase(ma))
+                    tonTai = true;
+            }
+            if (!tonTai)
+                return ma;
+            System.out.println("Ma san pham da ton tai. Hay nhap ma khac.");
         }
-        return ProductFactory.create(typeName, id, name, price, stock, info);
     }
 
-    private static void productMenu() {
-        int choice;
-        do {
-            System.out.println(
-                    "\n--- SaN PHAM ---\n1. Them\n2. Sua\n3. Xoa\n4. Tim kiem\n5. Thong ke\n6. Danh sach\n0. Quay lai");
-            choice = readInt("Chon: ", 0, 6);
+    // Doc ma moi chua duoc dung cho khach hang.
+    private static String nhapMaKhachHangMoi() {
+        while (true) {
+            String ma = nhapChuoi("Ma khach hang: ");
+            boolean tonTai = false;
+            for (Customer khachHang : store.layDanhSachKhachHang()) {
+                if (khachHang.layMa().equalsIgnoreCase(ma))
+                    tonTai = true;
+            }
+            if (!tonTai)
+                return ma;
+            System.out.println("Ma khach hang da ton tai. Hay nhap ma khac.");
+        }
+    }
+
+    // Doc ma moi chua duoc dung cho don hang.
+    private static String nhapMaDonHangMoi() {
+        while (true) {
+            String ma = nhapChuoi("Ma don hang: ");
+            boolean tonTai = false;
+            for (Order order : store.layDanhSachDonHang()) {
+                if (order.layMa().equalsIgnoreCase(ma))
+                    tonTai = true;
+            }
+            if (!tonTai)
+                return ma;
+            System.out.println("Ma don hang da ton tai. Hay nhap ma khac.");
+        }
+    }
+
+    // Doc ma moi chua duoc dung cho khoan thu chi.
+    private static String nhapMaThuChiMoi() {
+        while (true) {
+            String ma = nhapChuoi("Ma thu chi: ");
+            boolean tonTai = false;
+            for (CashFlow item : store.layDanhSachThuChi()) {
+                if (item.layMa().equalsIgnoreCase(ma))
+                    tonTai = true;
+            }
+            if (!tonTai)
+                return ma;
+            System.out.println("Ma thu chi da ton tai. Hay nhap ma khac.");
+        }
+    }
+
+    // Tim san pham; neu ma chua co thi hoi lai ma ngay tai truong nay.
+    private static Product nhapSanPhamDaCo() {
+        while (true) {
+            String ma = nhapChuoi("Ma san pham: ");
             try {
-                if (choice == 1) {
-                    Product p = readProduct(readText("Ma san pham: "), 0);
-                    shop.addProduct(p);
-                    saved();
+                return store.timSanPhamTheoMa(ma);
+            } catch (RetailStore.ProductNotFoundException e) {
+                System.out.println(e.getMessage() + ". Hay nhap lai ma.");
+            }
+        }
+    }
+
+    // Tim khach hang; neu ma chua co thi hoi lai ma ngay tai truong nay.
+    private static Customer nhapKhachHangDaCo() {
+        while (true) {
+            String ma = nhapChuoi("Ma khach hang: ");
+            try {
+                return store.timKhachHangTheoMa(ma);
+            } catch (IllegalArgumentException e) {
+                System.out.println(e.getMessage() + ". Hay nhap lai ma.");
+            }
+        }
+    }
+
+    // Tim don hang; neu ma chua co thi hoi lai ma ngay tai truong nay.
+    private static Order nhapDonHangDaCo() {
+        while (true) {
+            String ma = nhapChuoi("Ma don hang: ");
+            try {
+                return store.timDonHangTheoMa(ma);
+            } catch (IllegalArgumentException e) {
+                System.out.println(e.getMessage() + ". Hay nhap lai ma.");
+            }
+        }
+    }
+
+    // Tim khoan thu chi; neu ma chua co thi hoi lai ma ngay tai truong nay.
+    private static CashFlow nhapThuChiDaCo() {
+        while (true) {
+            String ma = nhapChuoi("Ma thu chi: ");
+            try {
+                return store.timThuChiTheoMa(ma);
+            } catch (IllegalArgumentException e) {
+                System.out.println(e.getMessage() + ". Hay nhap lai ma.");
+            }
+        }
+    }
+
+    // Nhap cac truong san pham; khi sua thi giu nguyen loai san pham.
+    private static Product nhapThongTinSanPham(String ma, int tonKho, String loaiHienTai) {
+        String ten = nhapChuoi("Ten san pham: ");
+        double gia = nhapSoTien("Gia ban: ");
+        String tenLoai;
+        String thongTinRieng;
+        int maLoai;
+        if (loaiHienTai == null) {
+            System.out.println("  1. Thuc pham\n  2. Dien tu\n  3. Quan ao");
+            maLoai = nhapSoNguyen("Loai san pham: ", 1, 3);
+        } else if (loaiHienTai.equalsIgnoreCase("Thuc pham") || loaiHienTai.equalsIgnoreCase("ThucPham")
+                || loaiHienTai.equalsIgnoreCase("Food"))
+            maLoai = 1;
+        else if (loaiHienTai.equalsIgnoreCase("Dien tu") || loaiHienTai.equalsIgnoreCase("DienTu")
+                || loaiHienTai.equalsIgnoreCase("Electronics"))
+            maLoai = 2;
+        else
+            maLoai = 3;
+        if (maLoai == 1) {
+            tenLoai = "thucpham";
+            thongTinRieng = nhapNgay("Han su dung (dd/MM/yyyy): ");
+        } else if (maLoai == 2) {
+            tenLoai = "dientu";
+            thongTinRieng = String.valueOf(nhapSoNguyen("So thang bao hanh: ", 0, 100));
+        } else {
+            tenLoai = "quanao";
+            thongTinRieng = nhapChuoi("Kich co quan ao: ");
+        }
+        if (loaiHienTai != null)
+            tonKho = nhapSoNguyen("So luong ton kho: ", 0, Integer.MAX_VALUE);
+        return ProductFactory.tao(tenLoai, ma, ten, gia, tonKho, thongTinRieng);
+    }
+
+    // Hien thi menu san pham va goi chuc nang tuong ung.
+    private static void menuSanPham() {
+        int luaChon;
+        do {
+            System.out.println("\n+----------------- QUAN LY SAN PHAM -----------------+");
+            System.out.println("| 1. Them san pham   2. Sua san pham/ton kho         |");
+            System.out.println("| 3. Xoa san pham    4. Tim san pham                 |");
+            System.out.println("| 5. Thong ke        6. Xem tat ca                   |");
+            System.out.println("| 0. Quay lai                                        |");
+            System.out.println("+-----------------------------------------------------+");
+            luaChon = nhapSoNguyen("Chon chuc nang: ", 0, 6);
+            try {
+                if (luaChon == 1) {
+                    Product sanPham = nhapThongTinSanPham(nhapMaSanPhamMoi(), Product.TON_KHO_MAC_DINH, null);
+                    store.themSanPham(sanPham);
+                    luuSauKhiThayDoi();
                     System.out.println("Da them san pham.");
-                } else if (choice == 2) {
-                    Product old = shop.findProduct(readText("Ma can sua: "));
-                    Product fresh = readProduct(old.getId(), old.getStock(), old.getCategory());
-                    old.setName(fresh.getName());
-                    old.setPrice(fresh.getPrice());
-                    old.setStock(fresh.getStock());
-                    if (old instanceof Food)
-                        ((Food) old).setExpiryDate(((Food) fresh).getExpiryDate());
-                    if (old instanceof Electronics)
-                        ((Electronics) old).setWarrantyMonths(((Electronics) fresh).getWarrantyMonths());
-                    if (old instanceof Clothing)
-                        ((Clothing) old).setSize(((Clothing) fresh).getSize());
-                    saved();
-                    System.out.println("Da sua.");
-                } else if (choice == 3) {
-                    shop.deleteProduct(readText("Ma can xoa: "));
-                    saved();
-                    System.out.println("Da xoa.");
-                } else if (choice == 4) {
-                    String key = readText("Nhap ma hoac ten: ");
-                    showList(shop.timKiem(key));
-                    System.out.println("Ket qua " + shop.coKetQua(key));
-                } else if (choice == 5) {
-                    int food = 0, electronics = 0, clothing = 0, stock = 0;
-                    for (Product p : shop.getProducts()) {
-                        if (p instanceof Food)
-                            food++;
-                        else if (p instanceof Electronics)
-                            electronics++;
-                        else if (p instanceof Clothing)
-                            clothing++;
-                        stock += p.getStock();
+                } else if (luaChon == 2) {
+                    Product cu = nhapSanPhamDaCo();
+                    Product updated = nhapThongTinSanPham(cu.layMa(), cu.layTonKho(), cu.layLoai());
+                    cu.ganTen(updated.layTen());
+                    cu.ganGia(updated.layGia());
+                    cu.ganTonKho(updated.layTonKho());
+                    if (cu instanceof Food)
+                        ((Food) cu).ganHanSuDung(((Food) updated).layHanSuDung());
+                    if (cu instanceof Electronics)
+                        ((Electronics) cu).ganThangBaoHanh(((Electronics) updated).layThangBaoHanh());
+                    if (cu instanceof Clothing)
+                        ((Clothing) cu).ganKichCo(((Clothing) updated).layKichCo());
+                    luuSauKhiThayDoi();
+                    System.out.println("Da cap nhat san pham.");
+                } else if (luaChon == 3) {
+                    store.xoaSanPham(nhapSanPhamDaCo().layMa());
+                    luuSauKhiThayDoi();
+                    System.out.println("Da xoa san pham.");
+                } else if (luaChon == 4) {
+                    String tuKhoa = nhapChuoi("Nhap ma hoac ten san pham: ");
+                    hienThiDanhSach(store.timKiem(tuKhoa));
+                    System.out.println("So ket qua tim thay: " + store.coKetQua(tuKhoa));
+                } else if (luaChon == 5) {
+                    int thucPham = 0, dienTu = 0, quanAo = 0, totalStock = 0;
+                    for (Product sanPham : store.layDanhSachSanPham()) {
+                        if (sanPham instanceof Food)
+                            thucPham++;
+                        else if (sanPham instanceof Electronics)
+                            dienTu++;
+                        else if (sanPham instanceof Clothing)
+                            quanAo++;
+                        totalStock += sanPham.layTonKho();
                     }
-                    System.out.println("Food: " + food + " | Electronics: " + electronics + " | Clothing: " + clothing);
-                    System.out.println("Tong san Pham: " + shop.getProducts().size() + " | Tong ton kho: " + stock);
-                } else if (choice == 6)
-                    showList(shop.getProducts());
+                    System.out.println("Thuc pham: " + thucPham + " | Dien tu: " + dienTu + " | Quan ao: " + quanAo);
+                    System.out.println(
+                            "So san pham: " + store.layDanhSachSanPham().size() + " | Tong ton kho: " + totalStock);
+                } else if (luaChon == 6)
+                    hienThiDanhSach(store.layDanhSachSanPham());
             } catch (RuntimeException e) {
-                System.out.println("Lỗi: " + e.getMessage());
+                System.out.println("Khong the thuc hien thao tac san pham: " + e.getMessage());
             }
-        } while (choice != 0);
+        } while (luaChon != 0);
     }
 
-    private static void customerMenu() {
-        int choice;
+    // Hien thi menu khach hang va xu ly du chuc nang quan ly.
+    private static void menuKhachHang() {
+        int luaChon;
         do {
-            System.out.println(
-                    "\n--- Quan ly khach hang ---\n1. Them\n2. Sua\n3. Xoa\n4. Tim kiem\n5. Thong ke\n6. Danh sach\n0. Quay lai");
-            choice = readInt("Chon: ", 0, 6);
+            System.out.println("\n+---------------- QUAN LY KHACH HANG ----------------+");
+            System.out.println("| 1. Them khach hang 2. Sua khach hang               |");
+            System.out.println("| 3. Xoa khach hang  4. Tim khach hang               |");
+            System.out.println("| 5. Thong ke        6. Xem tat ca                   |");
+            System.out.println("| 0. Quay lai                                        |");
+            System.out.println("+-----------------------------------------------------+");
+            luaChon = nhapSoNguyen("Chon chuc nang: ", 0, 6);
             try {
-                if (choice == 1) {
-                    shop.addCustomer(
-                            new Customer(readText("Ma Khac: "), readText("Ten: "), readText("So dien thoai: ")));
-                    saved();
-                    System.out.println("Da them khah hang.");
-                } else if (choice == 2) {
-                    Customer c = shop.findCustomer(readText("Ma khach hang can sua: "));
-                    c.setName(readText("Ten moi "));
-                    c.setPhone(readText("So dien thoai moi: "));
-                    saved();
-                    System.out.println("Da sua.");
-                } else if (choice == 3) {
-                    shop.deleteCustomer(readText("Ma khach hang can xoa: "));
-                    saved();
-                    System.out.println("da xoa!.");
-                } else if (choice == 4)
-                    showList(shop.searchCustomers(readText("Ma hoac ten: ")));
-                else if (choice == 5)
-                    System.out.println("Tong khach hang: " + shop.getCustomers().size());
-                else if (choice == 6)
-                    showList(shop.getCustomers());
+                if (luaChon == 1) {
+                    Customer khachHang = new Customer(nhapMaKhachHangMoi(), nhapChuoi("Ten khach hang: "),
+                            nhapChuoi("So dien thoai: "));
+                    store.themKhachHang(khachHang);
+                    luuSauKhiThayDoi();
+                    System.out.println("Da them khach hang.");
+                } else if (luaChon == 2) {
+                    Customer khachHang = nhapKhachHangDaCo();
+                    khachHang.ganTen(nhapChuoi("Ten moi: "));
+                    khachHang.ganSoDienThoai(nhapChuoi("So dien thoai moi: "));
+                    luuSauKhiThayDoi();
+                    System.out.println("Da cap nhat khach hang.");
+                } else if (luaChon == 3) {
+                    store.xoaKhachHang(nhapKhachHangDaCo().layMa());
+                    luuSauKhiThayDoi();
+                    System.out.println("Da xoa khach hang.");
+                } else if (luaChon == 4) {
+                    hienThiDanhSach(store.timKiemKhachHang(nhapChuoi("Nhap ma hoac ten khach hang: ")));
+                } else if (luaChon == 5) {
+                    System.out.println("Tong so khach hang: " + store.layDanhSachKhachHang().size());
+                } else if (luaChon == 6)
+                    hienThiDanhSach(store.layDanhSachKhachHang());
             } catch (RuntimeException e) {
-                System.out.println("Loi: " + e.getMessage());
+                System.out.println("Khong the thuc hien thao tac khach hang: " + e.getMessage());
             }
-        } while (choice != 0);
+        } while (luaChon != 0);
     }
 
-    private static void orderMenu() {
-        int choice;
+    // Hien thi menu don hang va quan ly cac dong san pham trong don.
+    private static void menuDonHang() {
+        int luaChon;
         do {
-            System.out.println(
-                    "\n--- Quan Ly don hang ---\n1. Them\n2. Sua\n3. Xoa\n4. Tim kiem\n5. Thong ke\n6. Danh sach\n0. Quay lai");
-            choice = readInt("Chon: ", 0, 6);
+            System.out.println("\n+------------------ QUAN LY DON HANG ----------------+");
+            System.out.println("| 1. Them don hang   2. Sua so luong                   |");
+            System.out.println("| 3. Xoa don hang    4. Tim don hang                   |");
+            System.out.println("| 5. Thong ke        6. Xem tat ca                     |");
+            System.out.println("| 0. Quay lai                                          |");
+            System.out.println("+------------------------------------------------------+");
+            luaChon = nhapSoNguyen("Chon chuc nang: ", 0, 6);
             try {
-                if (choice == 1) {
-                    String id = readText("ma don: ");
-                    Customer c = shop.findCustomer(readText("ma khach: "));
-                    Order order = new Order(id, c);
-                    int more;
+                if (luaChon == 1) {
+                    Order order = new Order(nhapMaDonHangMoi(), nhapKhachHangDaCo());
+                    int them;
                     do {
-                        Product p = shop.findProduct(readText("Ma san pham: "));
-                        order.addItem(p, readPositiveInt("So Luong: "));
-                        more = readInt("Them dong hang (1 Co, 0 Khong): ", 0, 1);
-                    } while (more == 1);
-                    shop.addOrder(order);
-                    saved();
-                    System.out.println("Da tao don. Tong tien: " + order.getTotal());
-                } else if (choice == 2) {
-                    Order order = shop.findOrder(readText("Ma don: "));
-                    if (order.getItems().isEmpty())
-                        throw new IllegalArgumentException("Don Chua co san pham");
-                    showList(order.getItems());
-                    int line = readInt("Sso Thu tu dong can sua: ", 1, order.getItems().size()) - 1;
-                    order.getItems().get(line).setQuantity(readPositiveInt("So luong moi: "));
-                    saved();
-                    System.out.println("Da tao don. Tong tien:  " + order.getTotal());
-                } else if (choice == 3) {
-                    shop.deleteOrder(readText("Ma don can xoa: "));
-                    saved();
-                    System.out.println("Da xoa.");
-                } else if (choice == 4)
-                    showList(shop.searchOrders(readText("Ma don hoac ten khach hang: ")));
-                else if (choice == 5)
-                    System.out.println("Tong don " + shop.getOrders().size() + " | Doanh thu: " + shop.totalRevenue());
-                else if (choice == 6)
-                    showList(shop.getOrders());
+                        Product sanPham = nhapSanPhamDaCo();
+                        order.themMatHang(sanPham, nhapSoDuong("So luong: "));
+                        them = nhapSoNguyen("Them san pham khac? (1 Co, 0 Khong): ", 0, 1);
+                    } while (them == 1);
+                    store.themDonHang(order);
+                    luuSauKhiThayDoi();
+                    System.out.println("Da them don hang. Tong tien: " + order.tinhTongTien());
+                } else if (luaChon == 2) {
+                    Order order = nhapDonHangDaCo();
+                    if (order.layDanhSachMatHang().isEmpty())
+                        throw new IllegalArgumentException("Don hang chua co san pham.");
+                    hienThiDanhSach(order.layDanhSachMatHang());
+                    int dong = nhapSoNguyen("So thu tu mat hang can sua: ", 1, order.layDanhSachMatHang().size()) - 1;
+                    order.layDanhSachMatHang().get(dong).ganSoLuong(nhapSoDuong("So luong moi: "));
+                    luuSauKhiThayDoi();
+                    System.out.println("Da cap nhat don hang. Tong tien: " + order.tinhTongTien());
+                } else if (luaChon == 3) {
+                    store.xoaDonHang(nhapDonHangDaCo().layMa());
+                    luuSauKhiThayDoi();
+                    System.out.println("Da xoa don hang.");
+                } else if (luaChon == 4) {
+                    hienThiDanhSach(store.timKiemDonHang(nhapChuoi("Nhap ma don hang hoac ten khach hang: ")));
+                } else if (luaChon == 5) {
+                    System.out.println("So don hang: " + store.layDanhSachDonHang().size() + " | Doanh thu: "
+                            + store.tinhDoanhThu());
+                } else if (luaChon == 6)
+                    hienThiDanhSach(store.layDanhSachDonHang());
             } catch (RuntimeException e) {
-                System.out.println("Lỗi: " + e.getMessage());
+                System.out.println("Khong the thuc hien thao tac don hang: " + e.getMessage());
             }
-        } while (choice != 0);
+        } while (luaChon != 0);
     }
 
-    private static void thuChiMenu() {
-        int choice;
+    // Hien thi menu thu chi va tinh tong cac khoan tuong ung.
+    private static void menuThuChi() {
+        int luaChon;
         do {
-            System.out.println(
-                    "\n--- THU CHI ---\n1. Them\n2. Tim kiem\n3. Thong ke\n4. Danh sach\n0. Quay lai");
-            choice = readInt("Chon: ", 0, 6);
+            System.out.println("\n+------------------ QUAN LY THU CHI ------------------+");
+            System.out.println("| 1. Them khoan      2. Sua khoan                    |");
+            System.out.println("| 3. Xoa khoan       4. Tim khoan                    |");
+            System.out.println("| 5. Thong ke        6. Xem tat ca                   |");
+            System.out.println("| 0. Quay lai                                        |");
+            System.out.println("+-----------------------------------------------------+");
+            luaChon = nhapSoNguyen("Chon chuc nang: ", 0, 6);
             try {
-                if (choice == 1) {
-                    String id = readText("Ma: ");
-                    String content = readText("Noi dung: ");
-                    System.out.println("1. Thu\n2. Chi");
-                    String type = readInt("Loai: ", 1, 2) == 1 ? ThuChi.THU : ThuChi.CHI;
-                    shop.addThuChi(new ThuChi(id, content, type, readPositiveDouble("So tien: ")));
-                    saved();
-                    System.out.println("Da them Khoan thu chi.");
-                } else if (choice == 2)
-                    showList(shop.searchThuChi(readText("Ma hoac noi dung ")));
-                else if (choice == 3) {
-                    double thu = shop.totalByType(ThuChi.THU), chi = shop.totalByType(ThuChi.CHI);
-                    System.out.println("Tong thu: " + thu + " |Tong chi: " + chi + " | Con lai: " + (thu - chi));
-                } else if (choice == 4)
-                    showList(shop.getThuChiList());
+                if (luaChon == 1) {
+                    String ma = nhapMaThuChiMoi();
+                    String noiDung = nhapChuoi("Noi dung: ");
+                    System.out.println("  1. Thu\n  2. Chi");
+                    String loai = nhapSoNguyen("Loai: ", 1, 2) == 1 ? CashFlow.THU : CashFlow.CHI;
+                    CashFlow item = new CashFlow(ma, noiDung, loai, nhapSoTien("So tien: "));
+                    store.themThuChi(item);
+                    luuSauKhiThayDoi();
+                    System.out.println("Da them khoan thu chi.");
+                } else if (luaChon == 2) {
+                    CashFlow item = nhapThuChiDaCo();
+                    item.ganNoiDung(nhapChuoi("Noi dung moi: "));
+                    System.out.println("  1. Thu\n  2. Chi");
+                    item.ganLoai(nhapSoNguyen("Loai moi: ", 1, 2) == 1 ? CashFlow.THU : CashFlow.CHI);
+                    item.ganSoTien(nhapSoTien("So tien moi: "));
+                    item.ganNgay(nhapNgay("Ngay (dd/MM/yyyy): "));
+                    luuSauKhiThayDoi();
+                    System.out.println("Da cap nhat khoan thu chi.");
+                } else if (luaChon == 3) {
+                    store.xoaThuChi(nhapThuChiDaCo().layMa());
+                    luuSauKhiThayDoi();
+                    System.out.println("Da xoa khoan thu chi.");
+                } else if (luaChon == 4) {
+                    hienThiDanhSach(store.timKiemThuChi(nhapChuoi("Nhap ma hoac noi dung: ")));
+                } else if (luaChon == 5) {
+                    double tongThu = store.tinhTongThuChi(CashFlow.THU);
+                    double tongChi = store.tinhTongThuChi(CashFlow.CHI);
+                    System.out.println(
+                            "Tong thu: " + tongThu + " | Tong chi: " + tongChi + " | So du: " + (tongThu - tongChi));
+                } else if (luaChon == 6)
+                    hienThiDanhSach(store.layDanhSachThuChi());
             } catch (RuntimeException e) {
-                System.out.println("Loi: " + e.getMessage());
+                System.out.println("Khong the thuc hien thao tac thu chi: " + e.getMessage());
             }
-        } while (choice != 0);
+        } while (luaChon != 0);
     }
 }
